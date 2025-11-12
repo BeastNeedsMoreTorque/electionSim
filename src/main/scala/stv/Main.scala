@@ -17,6 +17,7 @@ import stv.io.{Input, Output}
   */
 object Main {
   val outdir = "html"
+  private val numRidingsByElectionYr = Map(2015 → 338, 2011 → 308, 2008 → 308, 2006 → 308)
   val clArgParser = new scopt.OptionParser[CLArgs]("scopt") {
     head("Election Modelling", "2.x")
 
@@ -520,7 +521,6 @@ object Main {
     )
   )
   val namedSystems                   = featuredSystems ++ variantSystems
-  private val numRidingsByElectionYr = Map(2015 → 338, 2011 → 308, 2008 → 308, 2006 → 308)
 
   def main(args: Array[String]): Unit = {
     val start = java.time.LocalTime.now()
