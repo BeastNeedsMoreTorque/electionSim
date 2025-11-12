@@ -4,52 +4,43 @@ import scalatags.Text.TypedTag
 
 import stv.electionStrategy._
 
-/**
-  * The model design that we read from a JSON file.
+/** The model design that we read from a JSON file.
   *
   * @param provinces
   */
 
 case class Design(
-                   design_name: DesignName,
-                   description: TypedTag[String],
-                   election_strategies: List[ElectionStrategyEnum],
-                   provinces: Vector[Province]
-                 ) {
+  design_name: DesignName,
+  description: TypedTag[String],
+  election_strategies: List[ElectionStrategyEnum],
+  provinces: Vector[Province]
+) {
 
-
-  val regions: Vector[Region] = this.provinces.flatMap(p => p.regions)
-  val ridings: Vector[Riding] = this.regions.flatMap(r ⇒ r.ridings)
   lazy val candidates: Vector[Candidate] = this.ridings.flatMap(r ⇒ r.candidates0)
-
+  val regions: Vector[Region]            = this.provinces.flatMap(p => p.regions)
+  val ridings: Vector[Riding]            = this.regions.flatMap(r ⇒ r.ridings)
   val numSingleMemberRidings = ridings.count(r ⇒ r.districtMagnitude == 1)
-  val numMultiMemberRidings = ridings.count(r ⇒ r.districtMagnitude > 1)
-  val numTopupRegions = regions.count(r ⇒ r.topUpSeats > 0)
+  val numMultiMemberRidings  = ridings.count(r ⇒ r.districtMagnitude > 1)
+  val numTopupRegions        = regions.count(r ⇒ r.topUpSeats > 0)
 
   val hasSingleMemberRidings = this.numSingleMemberRidings > 0
 
   val hasMultiMemberRidings = this.numMultiMemberRidings > 0
 
-  def electionStrategies: List[ElectionStrategyEnum] = {
+  def electionStrategies: List[ElectionStrategyEnum] =
     this.election_strategies
-  }
 
-  def singleMbrStrategies: Vector[RidingElectionStrategy] = {
-    if (this.hasSingleMemberRidings) {
+  def singleMbrStrategies: Vector[RidingElectionStrategy] =
+    if (this.hasSingleMemberRidings)
       RidingElectionStrategy.singleMbrStrategies
-    } else {
+    else
       Vector(NotApplicableRidingElectionStrategy)
-    }
-  }
 
-  def multiMbrStrategies: Vector[RidingElectionStrategy] = {
-    if (this.hasMultiMemberRidings) {
+  def multiMbrStrategies: Vector[RidingElectionStrategy] =
+    if (this.hasMultiMemberRidings)
       RidingElectionStrategy.multiMbrStrategies
-    } else {
+    else
       Vector(NotApplicableRidingElectionStrategy)
-    }
-  }
-
 
   def debug: String = {
     val sb = new StringBuilder()
@@ -58,35 +49,31 @@ case class Design(
       sb.append(s"\nProv: ${prov.prov}\n")
       for (region <- prov.regions) {
         sb.append(s"\n\t${region.regionId}, topupSeats=${region.topUpSeats}\n")
-        for (riding <- region.ridings) {
+        for (riding <- region.ridings)
           sb.append(s"\t\t${riding.name}\n")
-        }
       }
     }
     return sb.toString()
   }
 
-
-  /**
-    * Run an election on this voting design.
+  /** Run an election on this voting design.
     */
-  def doElection(electionStrat: ElectionStrategyEnum,
-                 voteSwing: Option[VoteSwing]): ElectionResults = {
+  def doElection(electionStrat: ElectionStrategyEnum, voteSwing: Option[VoteSwing]): ElectionResults = {
 
-    var elected = Vector[Candidate]()
+    var elected   = Vector[Candidate]()
     var unelected = Vector[Candidate]()
-    var topup = Vector[Candidate]()
+    var topup     = Vector[Candidate]()
 
     for {
-      prov ← this.provinces //.filter(p ⇒ p.prov == ProvName.PE)
+      prov ← this.provinces // .filter(p ⇒ p.prov == ProvName.PE)
     } {
-      var provElected = Vector[Candidate]()
+      var provElected   = Vector[Candidate]()
       var provUnelected = Vector[Candidate]()
 
       for {
         region ← prov.regions
       } {
-        var regionElected = Vector[Candidate]()
+        var regionElected   = Vector[Candidate]()
         var regionUnelected = Vector[Candidate]()
         for {
           baseRiding ← region.ridings
@@ -97,27 +84,30 @@ case class Design(
             val (e, u) = eStrategy.runElection(riding.candidates0, riding.districtMagnitude)
             regionElected = regionElected ++ e
             regionUnelected = regionUnelected ++ u
-          } catch {
+          }
+          catch {
             case e: java.lang.Exception ⇒ throw new Exception(
-              s"${electionStrat.entryName} failed for riding ${riding.name} with dm ${riding.districtMagnitude} in " +
-                s"design ${this.design_name}.",
-              e
-            )
+                s"${electionStrat.entryName} failed for riding ${riding.name} with dm ${riding.districtMagnitude} in " +
+                  s"design ${this.design_name}.",
+                e
+              )
           }
         }
-        if (this.numTopupRegions > 0 && electionStrat != ElectionStrategyEnum.RcRUPR) {
+        if (this.numTopupRegions > 0 && electionStrat != ElectionStrategyEnum.RcRUPR)
           // Regional-level adjustments
-          try {
+          try
             topup = topup ++ electionStrat.topup.runElection(
               region.regionId,
-              regionElected ++ regionUnelected, region.topUpSeats, 0.03)
-          } catch {
-            case e: java.lang.Exception ⇒ throw new Exception(
-              s"${electionStrat.entryName} failed for region ${region.regionId} with ${region.topUpSeats} topup seats" +
-                s" in design ${this.design_name}.\n" + e.getMessage
+              regionElected ++ regionUnelected,
+              region.topUpSeats,
+              0.03
             )
+          catch {
+            case e: java.lang.Exception ⇒ throw new Exception(
+                s"${electionStrat.entryName} failed for region ${region.regionId} with ${region.topUpSeats} topup seats" +
+                  s" in design ${this.design_name}.\n" + e.getMessage
+              )
           }
-        }
 
         provElected = provElected ++ regionElected
         provUnelected = provUnelected ++ regionUnelected
@@ -134,8 +124,6 @@ case class Design(
       elected = elected ++ provElected
       unelected = unelected ++ provUnelected
     }
-
-
 
     //    assert(elected.length + topup.length == 338, s"${elected.length} + ${topup.length} != 338 (338 shouldn't be
     // " +

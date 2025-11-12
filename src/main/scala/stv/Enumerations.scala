@@ -3,9 +3,7 @@ package stv
 import enumeratum._
 import upickle.Js
 
-
-/**
-  * Created by bwbecker on 2016-08-09.
+/** Created by bwbecker on 2016-08-09.
   */
 
 abstract class EnumP[T <: EnumEntry] extends Enum[T] {
@@ -16,12 +14,14 @@ abstract class EnumP[T <: EnumEntry] extends Enum[T] {
 
   implicit val reader = Pickler.Reader[T] {
     case Js.Str(str) => this.withName(str)
-    case x           ⇒ throw upickle.Invalid.Data(x,
-      s"$x is not one of {${
-        EnumP.this.values.map {
-          _.entryName
-        }.mkString(", ")
-      }}.")
+    case x ⇒ throw upickle.Invalid.Data(
+        x,
+        s"$x is not one of {${
+            EnumP.this.values.map {
+              _.entryName
+            }.mkString(", ")
+          }}."
+      )
   }
 
 }
@@ -47,35 +47,50 @@ object DesignName extends EnumP[DesignName] {
 
   case object mmp_enlargeP extends DesignName("ME", "MMP with 338 local ridings (enlarged Parliament)")
 
-  case object mmp_lite_prov extends DesignName("ML", "MMP with 338 local ridings (enlarged Parliament; provincial " +
-    "regions)")
+  case object mmp_lite_prov extends DesignName(
+        "ML",
+        "MMP with 338 local ridings (enlarged Parliament; provincial " +
+          "regions)"
+      )
 
   case object ru_singles extends DesignName("RS", "Rural-Urban with more single-member ridings")
 
-  case object ru_enlargeP extends DesignName("RE", "Rural-Urban with more single-member ridings and an enlarged " +
-    "Parliament")
+  case object ru_enlargeP extends DesignName(
+        "RE",
+        "Rural-Urban with more single-member ridings and an enlarged " +
+          "Parliament"
+      )
 
-  case object ru_lite_prov extends DesignName("RE", "Rural-Urban with more single-member ridings and 10% top-up; " +
-    "provincial regions")
+  case object ru_lite_prov extends DesignName(
+        "RE",
+        "Rural-Urban with more single-member ridings and 10% top-up; " +
+          "provincial regions"
+      )
 
-  case object ru_multiples extends DesignName("RM", "Rural-Urban with more multi-member ridings and fewer " +
-    "single-member ridings")
+  case object ru_multiples extends DesignName(
+        "RM",
+        "Rural-Urban with more multi-member ridings and fewer " +
+          "single-member ridings"
+      )
 
   case object ru_multiples_rc extends DesignName("", "")
 
   case object ru_multiples_rc2 extends DesignName("", "")
-  case object lpr_no_topup extends DesignName("", "")
-  case object lpr_with_topups extends DesignName("", "")
+  case object lpr_no_topup     extends DesignName("", "")
+  case object lpr_with_topups  extends DesignName("", "")
 
   case object kingsley extends DesignName("Ki", "Kingsley's model (similar to Rural-Urban, but with no top-up seats)")
 
-  //case object markbc_best extends DesignName("MBC", "Mark BC's STV+ Best Regions")
+  // case object markbc_best extends DesignName("MBC", "Mark BC's STV+ Best Regions")
 
   case object erre_ru extends DesignName("ER", "ERRE RU that gets top-ups from large multi-member ridings")
 
-  case object erre_ru_singles extends DesignName("ER", "ERRE RU that gets top-ups from large multi-member ridings; " +
-    "region = " +
-    "province")
+  case object erre_ru_singles extends DesignName(
+        "ER",
+        "ERRE RU that gets top-ups from large multi-member ridings; " +
+          "region = " +
+          "province"
+      )
 
   case object erre_ru_multiples_20pct extends DesignName("", "")
 
@@ -95,7 +110,6 @@ object DesignName extends EnumP[DesignName] {
 
 }
 
-
 sealed abstract class SeatType extends EnumEntry
 
 object SeatType extends EnumP[SeatType] {
@@ -108,7 +122,6 @@ object SeatType extends EnumP[SeatType] {
   case object AdjustmentSeat extends SeatType
 
 }
-
 
 sealed abstract class Party(val longName: String, val mainStream: Boolean) extends EnumEntry
 

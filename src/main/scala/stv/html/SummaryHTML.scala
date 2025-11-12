@@ -9,51 +9,39 @@ import scalatags.Text.all._
 
 import stv._
 
-/**
-  * Created by bwbecker on 2016-06-15.
+/** Created by bwbecker on 2016-06-15.
   */
 case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) extends Page {
 
-
-  protected val outDir: String = params.outDir
+  protected val outDir: String  = params.outDir
   protected val outFile: String = "index.html"
   protected val pgTitle: String = s"Summary of ${params.title} (${params.year} Data)"
 
-  protected def content: TypedTag[String] = {
+  protected def content: TypedTag[String] =
     div(
-
       parameters,
-
       summaryStats,
-
-      if (doVoteSwingAnalysis) {
+      if (doVoteSwingAnalysis)
         sensitivity(sensitivityPairs)
-      } else {
-        p()
-      },
-
+      else
+        p(),
       subsets,
-
       h2("Population vs. Riding Area"),
       ridingPopVsAreaGraph("popVsAreaGraph"),
-
       districtMagnitudes,
-
       h2("Methodology"),
       this.methodology
     )
-  }
-
 
   private def parameters = {
 
-    val rgt = cls := "right"
+    val rgt       = cls := "right"
     val rgtPadLft = cls := "right padLeft"
-    val lft = cls := "left padLeft"
+    val lft       = cls := "left padLeft"
 
-    def rowInt(label: String, content: Int): TypedTag[String] = tr(td(rgt)(label), td(rgtPadLft)(content))
+    def rowInt(label: String, content: Int): TypedTag[String]    = tr(td(rgt)(label), td(rgtPadLft)(content))
     def rowStr(label: String, content: String): TypedTag[String] = tr(td(rgt)(label), td(lft)(content))
-    def blankRow = tr(td(""), td(""))
+    def blankRow                                                 = tr(td(""), td(""))
 
     val leftTable = table(
       rowInt("Number of Constituency MPs:", sim.numRidingMPs),
@@ -88,7 +76,7 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
   }
 
   private def summaryStats = {
-    //val withTopups = sim.results.analysisByRegion(sim.regions)
+    // val withTopups = sim.results.analysisByRegion(sim.regions)
     val withTopups = new Analysis(sim.results.allCandidates, sim.numMPs, nationWide = true)
 
     div(
@@ -102,18 +90,17 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
     )
   }
 
-
   private def methodology: TypedTag[String] = {
 
     val smes = params.electionStrat.sm
     val mmes = params.electionStrat.mm
 
-    if (smes == mmes) {
+    if (smes == mmes)
       div(cls := "blockIndent")(
         h3(s"Ridings: ${smes.name}"),
         smes.description
       )
-    } else {
+    else
       div(cls := "blockIndent")(
         h3(s"Single-Member Ridings: ${smes.name}"),
         smes.description,
@@ -122,18 +109,16 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
         h3("Top-up Seats"),
         p("write a description")
       )
-    }
   }
-
 
   def districtMagnitudes = {
 
     def mkTable(counts: Seq[Int]) = {
       val groups = counts.groupBy(n ⇒ n)
-      val max = groups.keys.max
-      val min = groups.keys.min
-      var sum = 0.0
-      var n = 0
+      val max    = groups.keys.max
+      val min    = groups.keys.min
+      var sum    = 0.0
+      var n      = 0
 
       div(
         table(
@@ -155,52 +140,47 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
         region ← sim.regions
         prov = region.ridings.head.province
         if prov != "YT" && prov != "NT" && prov != "NU"
-      } yield {
-        region.ridings.map(_.districtMagnitude).sum + region.topUpSeats
-      }
-      //println(r)
+      } yield region.ridings.map(_.districtMagnitude).sum + region.topUpSeats
+      // println(r)
       r
     }
 
     div(
       h2("District Magnitudes"),
-
       div(cls := "districtMag blockIndent")(
         p(
           s"""The district magnitude is the number of MPs that represent as specific area.  With FPTP, all
         ridings are represented by a single MP, so the district magnitude is 1 for every riding.  In
         other systems, the number of MPs may vary.  These tables show the number of districts (riding or region)
-        that have a given number of MPs representing it for this electoral model."""),
-
+        that have a given number of MPs representing it for this electoral model."""
+        ),
         h3("Riding-Level District Magnitudes"),
         p(
           """When we considers the local riding, how many MPs are there?
-          How many ridings have that same number?"""),
+          How many ridings have that same number?"""
+        ),
         mkTable(sim.newRidings.values.map(r ⇒ r.districtMagnitude).toSeq),
-
         h3("Region-Level District Magnitudes"),
         p(
           """When we considers only the top-up MPs in a region, how many MPs are there?
-          How many regions have that same number?"""),
+          How many regions have that same number?"""
+        ),
         mkTable(sim.regions.map(_.topUpSeats)),
-
         h3("Combined District Magnitude"),
         p(
           """When we consider the total number of MPs in a region (all of the local riding plus the top-up MPs),
-          how many MPs are there?  How many ridings have that same number?"""),
+          how many MPs are there?  How many ridings have that same number?"""
+        ),
         p(
           """In electoral models that don't have the concept of a region with top-up MPs (like STV, FPTP, and AV),
-        the "region" is the province.  Territories are always excluded from this table."""),
-
+        the "region" is the province.  Territories are always excluded from this table."""
+        ),
         mkTable(combined)
-
       )
     )
   }
 
-
-  /**
-    * Statistics about various subsets of ridings.
+  /** Statistics about various subsets of ridings.
     */
   def subsets = {
 
@@ -211,13 +191,13 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
         div(cls := "blockIndent")(
           p(
             """Statistics concerning only the MPs elected in ridings, without the top-up MPs.
-          This is useful for understanding how much the top-up MPs help create proportionality."""),
+          This is useful for understanding how much the top-up MPs help create proportionality."""
+          ),
           ridingAnalysis.statsByPartyAsHTML(true)
         )
       )
 
     }
-
 
     def singleMemberRidingStats: TypedTag[String] = {
 
@@ -229,7 +209,8 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
           """Statistics on all of the single-member ridings as a group.  In a FPTP simulation, this
         will be the same as the above.  In an MMP simulation it will be similar to a FPTP because
         the top-up MPs are not included.  A Hybrid model is where it's the most interesting.  How
-        out of whack are the single-member ridings?"""),
+        out of whack are the single-member ridings?"""
+        ),
         singles.statsByPartyAsHTML()
       )
     }
@@ -237,20 +218,18 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
     def multiMemberRidingStats: Option[TypedTag[String]] = {
 
       val ridings = sim.newRidingsVec.filter(r ⇒ r.districtMagnitude > 1)
-      if (ridings.isEmpty) {
+      if (ridings.isEmpty)
         None
-      } else {
+      else {
 
         val multi = sim.results.analysisByRiding(ridings)
         Some(div(
           h3("Multi-Member Riding Stats"),
           p("""Statistics on all of the multi-member ridings as a group."""),
           multi.statsByPartyAsHTML()
-        )
-        )
+        ))
       }
     }
-
 
     def provinceStats(title: String, descr: String, provinces: List[ProvName]): TypedTag[String] = {
       val ridings = sim.results.analysisByRiding(sim.newRidingsVec.filter(r ⇒ provinces.contains(r.province)))
@@ -286,7 +265,8 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
       provinceStats(
         "BC",
         s"""Statistics on British Columbia.""",
-        provinces)
+        provinces
+      )
     }
 
     def prairieRidingStats = {
@@ -294,7 +274,8 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
       provinceStats(
         "Prairie Provinces",
         s"""Statistics on all of the "prairie" provinces: ${provinces.mkString(", ")}.""",
-        provinces)
+        provinces
+      )
     }
 
     def ontarioRidingStats = {
@@ -327,7 +308,6 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
       )
     }
 
-
     div(id := "subsets")(
       h2("Statistics for various subsets of ridings"),
       div(cls := "blockIndent")(
@@ -341,9 +321,9 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
         ontarioRidingStats,
         quebecRidingStats,
         albertaRidingStats
-      ))
+      )
+    )
   }
-
 
   def ridingPopVsAreaGraph(cssId: String): TypedTag[String] = {
 
@@ -354,53 +334,59 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
         (area, cumPop / totalPop)
       }
       val data = cumStats.map { case (area, pctPop) ⇒
-        s"{x:${area}, y:${(pctPop * 100).toInt}}"
+        s"{x:$area, y:${(pctPop * 100).toInt}}"
       }
       (data, cumStats)
     }
 
     val ridingByArea = sim.newRidingsVec.sortBy(_.area)
-    val maxArea = ridingByArea.last.area
+    val maxArea      = ridingByArea.last.area
 
     val totalPop = ridingByArea.map {
       _.population
     }.sum.toDouble
 
-    val (modelData, cumStats) = mkData(ridingByArea.map { r => (r.area, r.population) }, totalPop)
-    def popArea(pct: Double): Int = {
+    val (modelData, cumStats) = mkData(ridingByArea.map(r => (r.area, r.population)), totalPop)
+    def popArea(pct: Double): Int =
       cumStats.find(_._2 > pct).get._1
-    }
 
-    val (fptpData, _) = mkData(sim.originalRidings.sortBy(_.area).map { r => (r.area, r.pop) }, totalPop)
+    val (fptpData, _) = mkData(sim.originalRidings.sortBy(_.area).map(r => (r.area, r.pop)), totalPop)
 
     div(
       p(
         """One concern in developing an electoral system for Canada is the diversity in riding
         geographical sizes.  They
-        currently range from as small as 6km""", sup("2"), "to almost 2.1 million km",
+        currently range from as small as 6km""",
+        sup("2"),
+        "to almost 2.1 million km",
         sup("2"),
         """.  This graph gives the means to compare how
         different electoral systems deal with riding sizes.  It answers the question "What percentage of
-        Canada's population lives in ridings smaller than """, i("x"), "km", sup("2"),
-        """?". """),
-
+        Canada's population lives in ridings smaller than """,
+        i("x"),
+        "km",
+        sup("2"),
+        """?". """
+      ),
       p(
         f"""This graph shows that with this model 50%% of our population would live in ridings
       smaller than
-      ${popArea(0.5)}%,1d km""", sup("2"),
+      ${popArea(0.5)}%,1d km""",
+        sup("2"),
         f""" and 90%% of our population live in ridings
       smaller than
-      ${popArea(0.9)}%,1d km""", sup("2"),
-        """."""),
-
+      ${popArea(0.9)}%,1d km""",
+        sup("2"),
+        """."""
+      ),
       div(cls := "chart")(
         canvas(id := cssId, width := 400.px, height := 400.px),
         fieldset(
           legend("X Scale: "),
           input(`type` := "radio", name := "scale", id := "log", value := "log")("Logarithmic"),
           input(`type` := "radio", name := "scale", id := "linear", value := "linear", checked)("Linear")
-        )),
-
+        )
+      ),
       script(raw(
         s"""
         window.onload = function() {
@@ -419,7 +405,7 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
 
 
     var chartType = "linear"
-    var ctx = document.getElementById("${cssId}");
+    var ctx = document.getElementById("$cssId");
     var chartOptions = {
     type: 'line',
     data: {
@@ -460,7 +446,7 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
               position: 'bottom',
               ticks: {
                 min: 10,
-                max: 4000000, //${maxArea},
+                max: 4000000, //$maxArea,
                 callback: function(value, index, values) {
                   return value.toLocaleString();
                 }
@@ -474,60 +460,62 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
     }
   };
   var myChart = new Chart(ctx, chartOptions);
-"""))
+"""
+      ))
     )
   }
 
-  /**
-    * How sensitive is this model to voter mood swings?
+  /** How sensitive is this model to voter mood swings?
     */
   def sensitivity(pairs: List[(Party, Party)]): TypedTag[String] = {
 
-    val fromName = pairs.head._1.longName //stv.partyName(pairs.head._1)
-    val toName = pairs.head._2.longName // stv.partyName(pairs.head._2)
+    val fromName = pairs.head._1.longName // stv.partyName(pairs.head._1)
+    val toName   = pairs.head._2.longName // stv.partyName(pairs.head._2)
 
     val explanation = div(cls := "blockIndent")(
       p(
         s"""What happens if public sentiment swings towards one party and away from another?
       This graph tries to answer that question.  Using the riding-by-riding results from
       2015, it systematically moves an increasing number of votes from one party to
-      another."""),
-
+      another."""
+      ),
       p(
-        s"""If the lines representing the ${fromName}'s votes tracks the line for
-      the ${fromName}'s MPs (and similar for the other parties), then the electoral
-      system is proportional across a wide range of electoral scenarios."""),
-
+        s"""If the lines representing the $fromName's votes tracks the line for
+      the $fromName's MPs (and similar for the other parties), then the electoral
+      system is proportional across a wide range of electoral scenarios."""
+      ),
       p(
         s"""On the other hand, if the lines for the votes earned and the MPs elected
       are farther apart -- as is the case for FPTP and AV -- then the electoral system is not
-      proportional."""),
-
-      if (pairs.head._1 == Con && pairs.head._2 == Lib) {
-        p("Examples: ",
+      proportional."""
+      ),
+      if (pairs.head._1 == Con && pairs.head._2 == Lib)
+        p(
+          "Examples: ",
           ul(
             li(
               """At -20% on the bottom axis, 20% of the Liberal's vote in 2015 is
           given to the Conservatives to simulate an election where the Liberals earned
           31% of the vote and the Conservatives earned almost 40%.  The lighter
           red and blue lines show how many MPs would have been elected for each
-          party by this voting system."""),
+          party by this voting system."""
+            ),
             li(
               """At +6% on the bottom axis, 6% of the Conservative's vote in 2015 is
           given to the Liberals to simulate an even more lop-sided win (41.4% to 30%).
           Again, the
           light red and blue lines show how many MPs would have been elected for each
-          party by this voting system.""")
+          party by this voting system."""
+            )
           )
         )
-      } else {
-        p()
-      },
-
+      else
+        p(),
       p(
         """The black line, hopefully along the bottom of the graph, shows the
       Gallagher Index, an index of voting proportionality.  Smaller numbers
-      are better.""")
+      are better."""
+      )
 
       /*
       if (sim.design.is_proportional) {
@@ -547,18 +535,14 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
       } else {
         p()
       }
-      */
+       */
     )
 
-    def sensitivityGraph(canvasId: String,
-                         fromPartyName: String,
-                         toPartyName: String,
-                         data: Vector[SensitivityDataPoint]): TypedTag[String] = {
+    def sensitivityGraph(canvasId: String, fromPartyName: String, toPartyName: String, data: Vector[SensitivityDataPoint]): TypedTag[String] = {
 
-      def toData(lst: Seq[Double]): String = {
-        //data: ${lst.map(v ⇒ f"${v.libVotes*100}%4.1f").mkString("[", ", ", "]")},
-        lst.map { d ⇒ f"${d * 100}%4.1f" }.mkString("[", ", ", "]")
-      }
+      def toData(lst: Seq[Double]): String =
+        // data: ${lst.map(v ⇒ f"${v.libVotes*100}%4.1f").mkString("[", ", ", "]")},
+        lst.map(d ⇒ f"${d * 100}%4.1f").mkString("[", ", ", "]")
 
       script(raw(
         s"""
@@ -566,7 +550,7 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
     var myChart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: ${data.indices.map{i ⇒ s"'E${i+1}'"}.mkString("[", ", ", "]")},
+        labels: ${data.indices.map(i ⇒ s"'E${i + 1}'").mkString("[", ", ", "]")},
         datasets: [
         {
             label: 'Gallagher',
@@ -701,24 +685,24 @@ case class SummaryHTML(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean) e
         }
     }
 });
-"""))
+"""
+      ))
     }
-
 
     div(id := "sensitivity", cls := "sensitivity")(
       h2("Vote Swing Analysis"),
       explanation,
-      for {(fromParty, toParty) ← pairs
-           fromPartyName = fromParty.longName
-           toPartyName = toParty.longName
+      for {
+        (fromParty, toParty) ← pairs
+        fromPartyName = fromParty.longName
+        toPartyName   = toParty.longName
       } yield {
-        val data = sim.sensitivityAnalysis(fromParty, toParty)
+        val data         = sim.sensitivityAnalysis(fromParty, toParty)
         val avgGallagher = data.foldLeft(0.0)(_ + _.gallagher) / data.length
-        val canvasId = s"c$fromParty$toParty"
+        val canvasId     = s"c$fromParty$toParty"
         div(
-          h3(s"Voters shift from ${fromPartyName} to ${toPartyName}"),
+          h3(s"Voters shift from $fromPartyName to $toPartyName"),
           canvas(id := canvasId, width := 400.px, height := 400.px),
-
           sensitivityGraph(canvasId, fromPartyName, toPartyName, data),
           p(f"Average Gallagher Index: ${avgGallagher * 100}%4.1f%%")
         )

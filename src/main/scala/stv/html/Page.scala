@@ -7,39 +7,40 @@ import ca.bwbecker.io._
 import ca.bwbecker.enrichments._
 import stv.Main
 
-
 import java.io.File
-
 
 trait Page {
 
+  // if outDir has a year, we need to go up one more directory level for css and overviews.
+  private lazy val prefix = if ("\\d{4}/.*".r.matches(outDir)) "../.." else ".."
   protected val outDir: String
   protected val outFile: String
   protected val pgTitle: String
   protected val includeThisModelMenu = true
 
-  protected def content: TypedTag[String]
-
-  // if outDir has a year, we need to go up one more directory level for css and overviews.
-  private lazy val prefix = if ("\\d{4}/.*".r.matches(outDir)) {"../.."} else {".."}
+  /** Print this page to a file. */
+  def print: Unit = {
+    printToFile(new File(s"${Main.outdir}/$outDir/$outFile"))(p ⇒ p.println(renderPage))
+  }
 
   private def renderPage: TypedTag[String] = {
-    val css = s"${prefix}/css/main.css"
+    val css = s"$prefix/css/main.css"
     scalatags.Text.all.html(
       head(
         meta(charset := "UTF-8"),
-        link(rel := "stylesheet", href := css, `type` := "text/css"),
-        //link(rel := "stylesheet", href := "https://yui.yahooapis.com/pure/0.6.0/base-min.css"),
-        link(rel := "stylesheet", href := "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css"),
+        link(rel     := "stylesheet", href := css, `type` := "text/css"),
+        // link(rel := "stylesheet", href := "https://yui.yahooapis.com/pure/0.6.0/base-min.css"),
+        link(rel   := "stylesheet", href := "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css"),
         script(src := "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.2/Chart.min.js"),
         script(src := "../js/tablesort.min.js"),
-        scalatags.Text.tags2.title(pgTitle)),
+        scalatags.Text.tags2.title(pgTitle)
+      ),
       body(
         div(cls := "centreColumn")(
           menus,
-          //p(cls := "group"),
+          // p(cls := "group"),
           div(cls := "content")(
-            //p("stuff"),
+            // p("stuff"),
             h1(pgTitle),
             content,
             tracking
@@ -50,22 +51,16 @@ trait Page {
 
   }
 
-
-  /** Print this page to a file. */
-  def print: Unit = {
-    printToFile(new File(s"${Main.outdir}/${outDir}/${outFile}")) { p ⇒ p.println(renderPage) }
-  }
-
-  def menus = {
+  def menus =
     scalatags.Text.tags2.nav(cls := "group")(
       ul(
         li(
           a(href := "#")("Overview"),
           ul(
-            li(a(href := s"${prefix}/overview/index.html")("Featured Systems")),
-            li(a(href := s"${prefix}/overview/allSimulations.html")("All Systems")),
-            li(a(href := s"${prefix}/overview/erre.html")("ERRE Constrained Systems")),
-            li(a(href := s"${prefix}/ModellingElections_en.pdf")("ERRE Submission"))
+            li(a(href := s"$prefix/overview/index.html")("Featured Systems")),
+            li(a(href := s"$prefix/overview/allSimulations.html")("All Systems")),
+            li(a(href := s"$prefix/overview/erre.html")("ERRE Constrained Systems")),
+            li(a(href := s"$prefix/ModellingElections_en.pdf")("ERRE Submission"))
           )
         ),
         li(
@@ -73,11 +68,11 @@ trait Page {
           ul(
             for (p ← stv.Main.featuredSystems.sortBy(_.name)) yield {
               val file = if (this.includeThisModelMenu) this.outFile else "index.html"
-              li(a(href := s"${prefix}/${p.outDir}/${file}")(p.title))
+              li(a(href := s"$prefix/${p.outDir}/$file")(p.title))
             }
           )
         ),
-        if (this.includeThisModelMenu) {
+        if (this.includeThisModelMenu)
           li(
             a(href := "#")("This Model"),
             ul(
@@ -90,9 +85,8 @@ trait Page {
               li(a(href := "params.html")("Parameters"))
             )
           )
-        } else {
-          li(a(raw("&nbsp;")), ul())
-        },
+        else
+          li(a(raw("&nbsp;")), ul()),
         li(
           a(href := "about.html")("About"),
           ul(
@@ -101,10 +95,7 @@ trait Page {
           )
         )
       )
-
     )
-  }
-
 
   def tracking = raw(
     """
@@ -120,5 +111,7 @@ trait Page {
   </script>
     """
   )
+
+  protected def content: TypedTag[String]
 
 }

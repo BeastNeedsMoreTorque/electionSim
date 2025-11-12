@@ -1,0 +1,16 @@
+put your jar files here.
+build/compile bwblib from github and put the jar file here.
+
+stackoverflow
+https://stackoverflow.com/questions/12820715/add-external-jar-file-to-play-2-0-4/12822926#12822926
+
+"I use play 2.0.4 and I use an external jar, I created a lib folder inside the project, added the
+jar in this folder,
+run 'eclipsify' command and refresh the project in eclipse and I don't have problem.
+
+is your lib at the same level as app, conf, and tests?
+Yes, the lib folder has same level as app, conf and tests. I just try, it works"
+
+Maybe also in Intellij
+You can go to Project Structure Under Project Setting -> Modules -> Go to tab Dependencies ,
+under sbt-unmanaged-jars you can edit and add your lib manually.

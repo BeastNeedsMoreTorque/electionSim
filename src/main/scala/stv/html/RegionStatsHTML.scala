@@ -11,27 +11,23 @@ import scalatags.Text.all._
 import stv.{Party, Analysis, Params, Sim}
 import ca.bwbecker.enrichments.RichBoolean
 
-/**
-  * Created by bwbecker on 2016-07-04.
+/** Created by bwbecker on 2016-07-04.
   */
 case class RegionStatsHTML(params: Params, sim: Sim) extends Page {
 
-  protected val outDir: String = params.outDir
+  protected val outDir: String  = params.outDir
   protected val outFile: String = "regionStats.html"
   protected val pgTitle: String = s"Region Stats for ${params.title} (${params.year} Data)"
 
   // Column recording the Liberal overrepresentation totals
   private val LibOverRepColumn = 13
-  private val totals = Array.fill[Double](16)(0.0)
-  private val pctFmt = NumberFormat.getPercentInstance
-  private val fmt = NumberFormat.getNumberInstance
+  private val totals           = Array.fill[Double](16)(0.0)
+  private val pctFmt           = NumberFormat.getPercentInstance
+  private val fmt              = NumberFormat.getNumberInstance
   fmt.setMaximumFractionDigits(2)
   fmt.setMinimumFractionDigits(2)
 
-
-  protected def content: TypedTag[String] = {
-
-
+  protected def content: TypedTag[String] =
     div(cls := "blockInput")(
       definitions,
       doTable,
@@ -41,9 +37,7 @@ case class RegionStatsHTML(params: Params, sim: Sim) extends Page {
       script("""new Tablesort(document.getElementById('regionStats'));""")
     )
 
-  }
-
-  private def definitions: TypedTag[String] = {
+  private def definitions: TypedTag[String] =
     div(
       p("""Definitions:"""),
       ul(
@@ -52,22 +46,22 @@ case class RegionStatsHTML(params: Params, sim: Sim) extends Page {
         li(
           """Over/Under Representation: The difference in number of seats between what a party deserved,
             |based on first choice votes, and the number of seats they actually won.  Positive numbers indicate
-            |more seats than deserved; negative numbers indicate fewer seats than deserved.""".stripMargin),
+            |more seats than deserved; negative numbers indicate fewer seats than deserved.""".stripMargin
+        ),
         li("""Gallagher:  The Gallagher Index of Disproportionality for the region.""")
       )
     )
-  }
 
   private def doTable: TypedTag[String] = {
     val parties = List(Con, Bloc, Grn, Lib, NDP).zipWithIndex
 
     def seatsDeservedByOtherParties(statsByParty: Map[Party, StatsByParty]): Double = {
       val mainStream = parties.map(_._1)
-      val others = statsByParty.filterNot { case (p, sbp) => mainStream.contains(p) }
+      val others     = statsByParty.filterNot { case (p, sbp) => mainStream.contains(p) }
       others.map { case (p, sbp) => sbp.mps - sbp.deservedMPs }.sum
     }
 
-    val right = cls := "right"
+    val right     = cls                     := "right"
     val sortByNum = "data-sort-method".attr := "number"
 
     table(id := "regionStats", cls := "regionStats")(
@@ -81,11 +75,11 @@ case class RegionStatsHTML(params: Params, sim: Sim) extends Page {
         ),
         tr(
           th("Region Id"),
-          for {i <- 1 to 3
-               (p, idx) <- parties
-          } yield {
-            th(sortByNum)(p.toString) // parties of interest, repeated 3 times
-          },
+          for {
+            i        <- 1 to 3
+            (p, idx) <- parties
+          } yield th(sortByNum)(p.toString) // parties of interest, repeated 3 times
+          ,
           th(sortByNum)("Oth"),
           th(sortByNum)("Gallagher")
         )
@@ -93,10 +87,9 @@ case class RegionStatsHTML(params: Params, sim: Sim) extends Page {
       tbody(
         (for (region ← sim.regions.sortBy(r ⇒ r.ridings.head.province + r.regionId)) yield {
           val ridingSeats = region.ridings.map(r ⇒ r.districtMagnitude).sum
-          //val analysis = Analysis(sim.results.candidatesByRegion(region.regionId), region.totalCandidates)
+          // val analysis = Analysis(sim.results.candidatesByRegion(region.regionId), region.totalCandidates)
           val analysis = sim.results.analysisByRegion(Seq(region))
-          val sbp = analysis.statsByParty.map(s => (s.party, s)).toMap.withDefault((p) => StatsByParty(p, 0, 0.0, 0,
-            0.0, 0.0, 0, 0))
+          val sbp      = analysis.statsByParty.map(s => (s.party, s)).toMap.withDefault(p => StatsByParty(p, 0, 0.0, 0, 0.0, 0.0, 0, 0))
 
           tr(
             td(a(href := s"regionResults.html#${region.regionId}")(region.regionId)),
@@ -124,12 +117,8 @@ case class RegionStatsHTML(params: Params, sim: Sim) extends Page {
         }) :+ tfoot(
           tr(cls := "totalsRow")(
             td(right)("Totals:"),
-            for (i <- 0 to 9) yield {
-              td(right)(totals(i).toInt)
-            },
-            for (i <- 10 to 15) yield {
-              td(right)(fmt.format(totals(i)))
-            }
+            for (i <- 0 to 9) yield td(right)(totals(i).toInt),
+            for (i <- 10 to 15) yield td(right)(fmt.format(totals(i)))
           )
         )
       )
@@ -173,6 +162,6 @@ case class RegionStatsHTML(params: Params, sim: Sim) extends Page {
         )
       )
     }
-    */
+   */
 
 }
