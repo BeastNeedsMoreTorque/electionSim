@@ -25,5 +25,5 @@ WCentOnt_hand_calc.soulver
 .metals/
 .vscode/
 project/.bloop/
-project/metsls.sbt
+project/metals.sbt
 project/project/
