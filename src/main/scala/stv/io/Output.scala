@@ -1,6 +1,5 @@
 package stv.io
 
-import ca.bwbecker.io._
 import scalatags.Text.TypedTag
 import scalatags.Text.all._
 
@@ -13,7 +12,13 @@ import java.io.File
   */
 object Output {
 
-  val dirs = new CachedMkdir
+  /** Simple replacement for CachedMkdir - creates directories if they don't exist */
+  private def mkdirp(path: String): Unit = {
+    val dir = new File(path)
+    if (!dir.exists()) {
+      dir.mkdirs()
+    }
+  }
 
   /** Copy the output of the less compiler to where we want it.
     */
@@ -26,13 +31,13 @@ object Output {
 
     implicit def toPath(filename: String) = get(filename)
 
-    dirs.mkdirp(destDir + "/css/")
+    mkdirp(destDir + "/css/")
     copy("target/web/less/main/main.css", destDir + "/css/main.css", REPLACE_EXISTING)
   }
 
   def writeOverview(sims: List[Sim]): Unit = {
 
-    dirs.mkdirp(s"${Main.outdir}/overview")
+    mkdirp(s"${Main.outdir}/overview")
 
     val featuredSims = sims.filter(s =>
       Main.featuredSystems.exists { f =>
@@ -85,7 +90,7 @@ object Output {
   )
 
   def writeHtml(params: Params, sim: Sim, doVoteSwingAnalysis: Boolean): Unit = {
-    dirs.mkdirp(s"${Main.outdir}/${params.outDir}/")
+    mkdirp(s"${Main.outdir}/${params.outDir}/")
 
     //    copyLess(Main.outdir)
 
